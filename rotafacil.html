@@ -1,0 +1,1294 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>RotaFácil — App de Rotas para Vendedores</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Syne:wght@700;800&display=swap');
+
+:root {
+  --bg: #f0f2f5;
+  --white: #ffffff;
+  --surface: #ffffff;
+  --border: #e4e8ef;
+  --text: #1a1f2e;
+  --muted: #7b8299;
+  --primary: #1a56f0;
+  --primary-light: #e8effe;
+  --primary-dark: #1240c4;
+  --green: #16a34a;
+  --green-light: #dcfce7;
+  --orange: #d97706;
+  --orange-light: #fef3c7;
+  --red: #dc2626;
+  --red-light: #fee2e2;
+  --purple: #7c3aed;
+  --purple-light: #ede9fe;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.10);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.13);
+  --radius: 14px;
+  --radius-sm: 9px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  font-size: 14px;
+}
+
+/* ── SCREENS ── */
+.screen { display: none; min-height: 100vh; }
+.screen.active { display: flex; flex-direction: column; }
+
+/* ══════════════════════════════
+   SCREEN 1 — WELCOME / UPLOAD
+══════════════════════════════ */
+#screen-welcome {
+  background: linear-gradient(155deg, #1a56f0 0%, #0f3db5 60%, #0a2d8a 100%);
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0;
+}
+
+.welcome-hero {
+  width: 100%;
+  padding: 56px 24px 32px;
+  text-align: center;
+  color: white;
+}
+.welcome-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 28px;
+}
+.logo-icon {
+  width: 48px; height: 48px;
+  background: rgba(255,255,255,0.15);
+  border: 2px solid rgba(255,255,255,0.3);
+  border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 24px;
+}
+.logo-text {
+  font-family: 'Syne', sans-serif;
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  color: white;
+}
+.logo-text span { color: rgba(255,255,255,0.6); font-weight: 700; }
+
+.welcome-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 30px;
+  font-weight: 800;
+  line-height: 1.2;
+  margin-bottom: 14px;
+  letter-spacing: -0.5px;
+}
+.welcome-sub {
+  font-size: 15px;
+  color: rgba(255,255,255,0.75);
+  line-height: 1.6;
+  max-width: 320px;
+  margin: 0 auto 32px;
+}
+
+.welcome-card {
+  background: var(--white);
+  border-radius: 24px 24px 0 0;
+  padding: 32px 24px 40px;
+  flex: 1;
+  width: 100%;
+}
+
+.section-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin-bottom: 12px;
+}
+
+/* Upload zone */
+.upload-zone {
+  border: 2px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 32px 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: var(--bg);
+  margin-bottom: 20px;
+  position: relative;
+}
+.upload-zone:hover, .upload-zone.drag-over {
+  border-color: var(--primary);
+  background: var(--primary-light);
+}
+.upload-zone input[type="file"] {
+  position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+}
+.upload-icon { font-size: 36px; margin-bottom: 10px; }
+.upload-title { font-weight: 600; font-size: 15px; margin-bottom: 4px; }
+.upload-hint { font-size: 12px; color: var(--muted); }
+
+/* Config */
+.config-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.config-item label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+.config-item select, .config-item input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  color: var(--text);
+  background: white;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.config-item select:focus, .config-item input:focus {
+  border-color: var(--primary);
+}
+
+.btn-primary {
+  width: 100%;
+  padding: 16px;
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius);
+  font-family: 'Syne', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  letter-spacing: -0.2px;
+}
+.btn-primary:hover { background: var(--primary-dark); transform: translateY(-1px); box-shadow: var(--shadow-md); }
+.btn-primary:disabled { background: #b0bec5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+/* Template hint */
+.template-hint {
+  margin-top: 16px;
+  padding: 14px;
+  background: var(--primary-light);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  color: var(--primary);
+  line-height: 1.6;
+}
+.template-hint strong { display: block; margin-bottom: 4px; }
+
+/* Preview file */
+.file-preview {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  background: var(--green-light);
+  border-radius: var(--radius-sm);
+  margin-bottom: 16px;
+}
+.file-preview-icon { font-size: 24px; }
+.file-preview-name { font-weight: 600; font-size: 13px; color: var(--green); }
+.file-preview-info { font-size: 11px; color: var(--muted); }
+
+/* ══════════════════════════════
+   LOADING
+══════════════════════════════ */
+#screen-loading {
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+}
+.loading-box {
+  text-align: center;
+  padding: 40px 24px;
+}
+.loading-spinner {
+  width: 56px; height: 56px;
+  border: 4px solid var(--border);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  margin: 0 auto 24px;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-title { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+.loading-sub { font-size: 13px; color: var(--muted); }
+.loading-steps { margin-top: 24px; text-align: left; display: inline-block; }
+.loading-step {
+  font-size: 13px; color: var(--muted);
+  padding: 4px 0;
+  transition: color 0.3s;
+}
+.loading-step.done { color: var(--green); }
+.loading-step.active { color: var(--primary); font-weight: 600; }
+
+/* ══════════════════════════════
+   SCREEN 2 — ROTA
+══════════════════════════════ */
+#screen-rota { background: var(--bg); }
+
+/* Topbar */
+.topbar {
+  background: white;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: var(--shadow-sm);
+}
+.topbar-back {
+  width: 36px; height: 36px;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  font-size: 16px;
+  background: white;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+.topbar-back:hover { background: var(--bg); }
+.topbar-info { flex: 1; min-width: 0; }
+.topbar-name {
+  font-family: 'Syne', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.topbar-sub { font-size: 11px; color: var(--muted); margin-top: 1px; }
+.topbar-share {
+  width: 36px; height: 36px;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  font-size: 16px;
+  background: white;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+
+/* Stats strip */
+.stats-strip {
+  display: flex;
+  gap: 0;
+  background: white;
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.stats-strip::-webkit-scrollbar { display: none; }
+.stat-pill {
+  flex-shrink: 0;
+  padding: 10px 16px;
+  text-align: center;
+  border-right: 1px solid var(--border);
+}
+.stat-pill:last-child { border-right: none; }
+.stat-pill-val { font-size: 18px; font-weight: 700; color: var(--primary); }
+.stat-pill-lbl { font-size: 10px; color: var(--muted); margin-top: 1px; }
+
+/* Quinzena tabs */
+.q-tabs {
+  display: flex;
+  background: white;
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.q-tabs::-webkit-scrollbar { display: none; }
+.q-tab {
+  flex: 1;
+  padding: 12px 8px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  transition: all 0.2s;
+  white-space: nowrap;
+  background: none;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  font-family: 'Inter', sans-serif;
+}
+.q-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+
+/* Search bar */
+.search-wrap {
+  padding: 12px 16px 0;
+}
+.search-input {
+  width: 100%;
+  padding: 10px 14px 10px 36px;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  background: white url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%237b8299' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E") no-repeat 12px center;
+  outline: none;
+  color: var(--text);
+}
+.search-input:focus { border-color: var(--primary); }
+
+/* Rota content */
+.rota-content { padding: 12px 16px 80px; }
+.q-panel { display: none; }
+.q-panel.active { display: block; }
+
+/* Semana */
+.semana-sep {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  padding: 12px 4px 8px;
+}
+
+/* Dia card */
+.dia-card {
+  background: white;
+  border-radius: var(--radius);
+  margin-bottom: 10px;
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+.dia-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s;
+}
+.dia-head:hover { background: var(--bg); }
+.dia-num {
+  width: 32px; height: 32px;
+  border-radius: 9px;
+  font-size: 13px;
+  font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  background: var(--primary-light);
+  color: var(--primary);
+}
+.dia-info { flex: 1; min-width: 0; }
+.dia-title { font-weight: 600; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dia-bairro { font-size: 11px; color: var(--muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dia-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 20px;
+  background: var(--primary-light);
+  color: var(--primary);
+  flex-shrink: 0;
+}
+.dia-chevron { font-size: 11px; color: var(--muted); transition: transform 0.2s; flex-shrink: 0; }
+.dia-card.open .dia-chevron { transform: rotate(180deg); }
+.dia-progress {
+  height: 3px;
+  background: var(--border);
+}
+.dia-progress-bar {
+  height: 100%;
+  background: var(--green);
+  border-radius: 2px;
+  transition: width 0.4s;
+}
+
+/* Loja item */
+.lojas-list { display: none; }
+.dia-card.open .lojas-list { display: block; }
+
+.loja-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 11px 14px;
+  border-top: 1px solid var(--border);
+  transition: background 0.15s;
+  position: relative;
+}
+.loja-item:hover { background: #fafbff; }
+.loja-item.visitada { opacity: 0.5; }
+.loja-item.visitada .loja-nome { text-decoration: line-through; }
+
+.loja-check {
+  width: 20px; height: 20px;
+  border: 2px solid var(--border);
+  border-radius: 6px;
+  flex-shrink: 0;
+  margin-top: 1px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px;
+  transition: all 0.15s;
+  background: white;
+}
+.loja-item.visitada .loja-check {
+  background: var(--green);
+  border-color: var(--green);
+  color: white;
+}
+
+.loja-body { flex: 1; min-width: 0; }
+.loja-nome { font-weight: 600; font-size: 13px; }
+.loja-end { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.loja-tel { font-size: 11px; color: var(--primary); margin-top: 2px; }
+.loja-obs {
+  font-size: 11px;
+  color: var(--orange);
+  background: var(--orange-light);
+  padding: 3px 8px;
+  border-radius: 5px;
+  margin-top: 5px;
+  display: inline-block;
+}
+
+.loja-actions { display: flex; gap: 5px; flex-shrink: 0; flex-direction: column; align-items: flex-end; }
+.loja-status {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 5px;
+  margin-bottom: 4px;
+}
+.status-normal { background: var(--primary-light); color: var(--primary); }
+.status-visitada { background: var(--green-light); color: var(--green); }
+.status-atrasada { background: var(--orange-light); color: var(--orange); }
+.status-bloqueada { background: var(--red-light); color: var(--red); }
+
+.nav-row { display: flex; gap: 5px; }
+.btn-waze, .btn-gmaps, .btn-phone {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 6px 9px;
+  border-radius: 7px;
+  font-size: 11px;
+  font-weight: 600;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: opacity 0.15s;
+  font-family: 'Inter', sans-serif;
+}
+.btn-waze { background: rgba(53,178,249,0.13); color: #1a8fd1; }
+.btn-gmaps { background: rgba(234,67,53,0.12); color: #c0392b; }
+.btn-phone { background: var(--green-light); color: var(--green); }
+.btn-waze:hover, .btn-gmaps:hover, .btn-phone:hover { opacity: 0.75; }
+
+/* Obs button */
+.btn-obs {
+  font-size: 11px;
+  color: var(--muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px 0;
+  text-decoration: underline;
+  font-family: 'Inter', sans-serif;
+  margin-top: 2px;
+}
+
+/* FAB */
+.fab {
+  position: fixed;
+  bottom: 24px;
+  right: 20px;
+  width: 52px; height: 52px;
+  background: var(--primary);
+  border-radius: 16px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+  cursor: pointer;
+  box-shadow: var(--shadow-lg);
+  border: none;
+  z-index: 200;
+  transition: all 0.2s;
+}
+.fab:hover { transform: scale(1.08); background: var(--primary-dark); }
+
+/* ── MODAL ADD CLIENTE ── */
+.modal-overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 300;
+  align-items: flex-end;
+  justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+.modal-box {
+  background: white;
+  border-radius: 24px 24px 0 0;
+  padding: 24px 20px 40px;
+  width: 100%;
+  max-width: 480px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+.modal-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 20px;
+}
+.modal-field { margin-bottom: 14px; }
+.modal-field label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+.modal-field input, .modal-field select, .modal-field textarea {
+  width: 100%;
+  padding: 11px 13px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.2s;
+  background: white;
+}
+.modal-field input:focus, .modal-field select:focus, .modal-field textarea:focus {
+  border-color: var(--primary);
+}
+.modal-field textarea { resize: vertical; min-height: 70px; }
+.modal-btns { display: flex; gap: 10px; margin-top: 4px; }
+.btn-cancel {
+  flex: 1; padding: 13px;
+  background: var(--bg);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--text);
+}
+.btn-save {
+  flex: 2; padding: 13px;
+  background: var(--primary);
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: 'Syne', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  color: white;
+}
+
+/* ── TOAST ── */
+.toast {
+  position: fixed;
+  bottom: 90px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: #1a1f2e;
+  color: white;
+  padding: 10px 18px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.3s;
+  z-index: 400;
+  white-space: nowrap;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ── EMPTY STATE ── */
+.empty-state {
+  text-align: center;
+  padding: 48px 24px;
+  color: var(--muted);
+}
+.empty-icon { font-size: 40px; margin-bottom: 12px; }
+.empty-title { font-weight: 600; font-size: 15px; color: var(--text); margin-bottom: 6px; }
+.empty-sub { font-size: 13px; line-height: 1.6; }
+
+/* Responsive max-width */
+@media (min-width: 480px) {
+  .welcome-card { max-width: 480px; margin: 0 auto; border-radius: 24px; }
+  #screen-welcome { justify-content: center; }
+  .modal-box { border-radius: 24px; margin-bottom: 24px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════
+     SCREEN 1 — UPLOAD
+════════════════════════════ -->
+<div class="screen active" id="screen-welcome">
+  <div class="welcome-hero">
+    <div class="welcome-logo">
+      <div class="logo-icon">🗺️</div>
+      <div class="logo-text">Rota<span>Fácil</span></div>
+    </div>
+    <div class="welcome-title">Sua rota organizada<br>em segundos</div>
+    <div class="welcome-sub">Suba sua planilha de clientes e receba a rota do mês otimizada, pronta pra navegar.</div>
+  </div>
+
+  <div class="welcome-card">
+    <div class="section-label">Carregar base de clientes</div>
+
+    <div id="file-preview" style="display:none"></div>
+
+    <div class="upload-zone" id="upload-zone">
+      <input type="file" id="file-input" accept=".xlsx,.xls,.csv" onchange="handleFile(this)">
+      <div class="upload-icon">📊</div>
+      <div class="upload-title">Toque para selecionar o arquivo</div>
+      <div class="upload-hint">Excel (.xlsx, .xls) ou CSV — até 5MB</div>
+    </div>
+
+    <div class="config-grid">
+      <div class="config-item">
+        <label>Nome do vendedor</label>
+        <input type="text" id="cfg-nome" placeholder="Ex: Márcio" value="">
+      </div>
+      <div class="config-item">
+        <label>Visitas por período</label>
+        <select id="cfg-periodo">
+          <option value="15">A cada 15 dias</option>
+          <option value="7">Semanal</option>
+          <option value="30">Mensal</option>
+        </select>
+      </div>
+      <div class="config-item">
+        <label>Dias de trabalho/semana</label>
+        <select id="cfg-dias">
+          <option value="5">5 dias (seg–sex)</option>
+          <option value="6">6 dias (seg–sáb)</option>
+          <option value="4">4 dias</option>
+        </select>
+      </div>
+      <div class="config-item">
+        <label>Máx. clientes por dia</label>
+        <select id="cfg-maxdia">
+          <option value="6">Até 6</option>
+          <option value="4" selected>Até 4</option>
+          <option value="5">Até 5</option>
+          <option value="8">Até 8</option>
+          <option value="10">Até 10</option>
+        </select>
+      </div>
+    </div>
+
+    <button class="btn-primary" id="btn-gerar" onclick="gerarRota()" disabled>
+      Gerar rota do mês →
+    </button>
+
+    <div class="template-hint">
+      <strong>📋 Colunas aceitas na planilha:</strong>
+      <b>Nome</b> (ou Razão Social) · <b>Endereço</b> · <b>Bairro</b> · <b>Telefone</b> · <b>Observação</b>
+      — A ordem das colunas não importa. Nomes aproximados também funcionam.
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════
+     SCREEN LOADING
+════════════════════════════ -->
+<div class="screen" id="screen-loading">
+  <div class="loading-box">
+    <div class="loading-spinner"></div>
+    <div class="loading-title">Processando sua rota…</div>
+    <div class="loading-sub">Isso leva apenas alguns segundos</div>
+    <div class="loading-steps" id="loading-steps">
+      <div class="loading-step active" id="step-1">📂 Lendo planilha…</div>
+      <div class="loading-step" id="step-2">🗂️ Identificando colunas…</div>
+      <div class="loading-step" id="step-3">📍 Agrupando por região…</div>
+      <div class="loading-step" id="step-4">📅 Dividindo por semana e dia…</div>
+      <div class="loading-step" id="step-5">✅ Montando rota final…</div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════
+     SCREEN 2 — ROTA
+════════════════════════════ -->
+<div class="screen" id="screen-rota">
+  <div class="topbar">
+    <div class="topbar-back" onclick="voltarInicio()">←</div>
+    <div class="topbar-info">
+      <div class="topbar-name" id="topbar-nome">Rota do Mês</div>
+      <div class="topbar-sub" id="topbar-sub">RotaFácil</div>
+    </div>
+    <div class="topbar-share" onclick="exportarWhatsApp()" title="Exportar para WhatsApp">📤</div>
+  </div>
+
+  <div class="stats-strip" id="stats-strip"></div>
+
+  <div class="q-tabs" id="q-tabs"></div>
+
+  <div class="search-wrap">
+    <input type="text" class="search-input" placeholder="Buscar cliente ou endereço…" oninput="filtrarClientes(this.value)">
+  </div>
+
+  <div class="rota-content" id="rota-content"></div>
+
+  <button class="fab" onclick="abrirModalAdd()" title="Adicionar cliente">＋</button>
+</div>
+
+<!-- ════════════════════════════
+     MODAL — ADICIONAR CLIENTE
+════════════════════════════ -->
+<div class="modal-overlay" id="modal-add">
+  <div class="modal-box">
+    <div class="modal-title">➕ Adicionar cliente</div>
+    <div class="modal-field">
+      <label>Nome / Razão Social</label>
+      <input type="text" id="add-nome" placeholder="Ex: Supermercado Silva">
+    </div>
+    <div class="modal-field">
+      <label>Endereço completo</label>
+      <input type="text" id="add-end" placeholder="Ex: Rua das Flores, 123">
+    </div>
+    <div class="modal-field">
+      <label>Bairro</label>
+      <input type="text" id="add-bairro" placeholder="Ex: Jardim Paulista">
+    </div>
+    <div class="modal-field">
+      <label>Telefone</label>
+      <input type="tel" id="add-tel" placeholder="(11) 99999-9999">
+    </div>
+    <div class="modal-field">
+      <label>Observação</label>
+      <textarea id="add-obs" placeholder="Horário de atendimento, responsável, etc…"></textarea>
+    </div>
+    <div class="modal-field">
+      <label>Quinzena</label>
+      <select id="add-quinzena">
+        <option value="0">Quinzena 1</option>
+        <option value="1">Quinzena 2</option>
+      </select>
+    </div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="fecharModal()">Cancelar</button>
+      <button class="btn-save" onclick="salvarCliente()">Salvar cliente</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ════════════════════════════════
+//  STATE
+// ════════════════════════════════
+let allClientes = [];
+let quinzenas = [];
+let activeQ = 0;
+let visitados = JSON.parse(localStorage.getItem('rotafacil_visitados') || '{}');
+let observacoes = JSON.parse(localStorage.getItem('rotafacil_obs') || '{}');
+
+// ════════════════════════════════
+//  SCREEN NAV
+// ════════════════════════════════
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + id).classList.add('active');
+}
+
+// ════════════════════════════════
+//  FILE HANDLING
+// ════════════════════════════════
+function handleFile(input) {
+  const file = input.files[0];
+  if (!file) return;
+
+  const preview = document.getElementById('file-preview');
+  preview.style.display = 'flex';
+  preview.innerHTML = `
+    <div class="file-preview-icon">✅</div>
+    <div>
+      <div class="file-preview-name">${file.name}</div>
+      <div class="file-preview-info">${(file.size / 1024).toFixed(0)} KB · pronto para processar</div>
+    </div>`;
+
+  document.getElementById('upload-zone').style.display = 'none';
+  document.getElementById('btn-gerar').disabled = false;
+}
+
+const dropZone = document.getElementById('upload-zone');
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file) {
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    document.getElementById('file-input').files = dt.files;
+    handleFile(document.getElementById('file-input'));
+  }
+});
+
+// ════════════════════════════════
+//  COLUMN DETECTION
+// ════════════════════════════════
+function detectarColuna(headers, candidatos) {
+  for (const cand of candidatos) {
+    const idx = headers.findIndex(h =>
+      h && h.toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+        .includes(cand.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''))
+    );
+    if (idx >= 0) return idx;
+  }
+  return -1;
+}
+
+// ════════════════════════════════
+//  GERAR ROTA
+// ════════════════════════════════
+async function gerarRota() {
+  const input = document.getElementById('file-input');
+  if (!input.files[0]) { showToast('Selecione um arquivo primeiro'); return; }
+
+  showScreen('loading');
+
+  const file = input.files[0];
+  const nome = document.getElementById('cfg-nome').value || 'Vendedor';
+  const maxDia = parseInt(document.getElementById('cfg-maxdia').value);
+
+  await stepLoad(1);
+  const data = await lerArquivo(file);
+
+  await stepLoad(2);
+  const clientes = parseClientes(data);
+
+  await stepLoad(3);
+  const agrupados = agruparPorRegiao(clientes);
+
+  await stepLoad(4);
+  quinzenas = dividirQuinzenas(agrupados, maxDia);
+
+  await stepLoad(5);
+  allClientes = clientes;
+
+  renderRota(nome, clientes.length);
+  showScreen('rota');
+}
+
+function stepLoad(n) {
+  return new Promise(resolve => {
+    setTimeout(() => {
+      for (let i = 1; i <= 5; i++) {
+        const el = document.getElementById('step-' + i);
+        if (i < n) { el.classList.remove('active'); el.classList.add('done'); el.textContent = '✔ ' + el.textContent.replace('✔ ',''); }
+        else if (i === n) { el.classList.add('active'); }
+        else { el.classList.remove('active','done'); }
+      }
+      resolve();
+    }, 400);
+  });
+}
+
+function lerArquivo(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      try {
+        const wb = XLSX.read(e.target.result, { type: 'binary' });
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        const json = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+        resolve(json);
+      } catch(err) { reject(err); }
+    };
+    reader.readAsBinaryString(file);
+  });
+}
+
+function parseClientes(rows) {
+  if (rows.length < 2) return [];
+  const headers = rows[0].map(h => h ? h.toString().trim() : '');
+
+  const iNome = detectarColuna(headers, ['nome','razao','razsoc','cliente','empresa','fantasia']);
+  const iEnd  = detectarColuna(headers, ['endereco','endereço','logradouro','rua','end']);
+  const iBairro = detectarColuna(headers, ['bairro','regiao','região','distrito','zona']);
+  const iTel  = detectarColuna(headers, ['telefone','fone','tel','celular','contato','whatsapp']);
+  const iObs  = detectarColuna(headers, ['observacao','observação','obs','nota','anotacao']);
+  const iStatus = detectarColuna(headers, ['status','situacao','situação','ativo','bloqueado']);
+
+  const clientes = [];
+  for (let i = 1; i < rows.length; i++) {
+    const row = rows[i];
+    const nome = iNome >= 0 ? row[iNome]?.toString().trim() : '';
+    const end  = iEnd  >= 0 ? row[iEnd]?.toString().trim()  : '';
+    if (!nome && !end) continue;
+
+    const status = iStatus >= 0 ? row[iStatus]?.toString().toLowerCase() : '';
+    const bloqueado = status.includes('bloq') || status.includes('inativ') || status.includes('cancel');
+    if (bloqueado) continue;
+
+    clientes.push({
+      id: `c${i}`,
+      nome: nome || '(sem nome)',
+      end: end || '',
+      bairro: iBairro >= 0 ? (row[iBairro]?.toString().trim() || '') : '',
+      tel: iTel >= 0 ? (row[iTel]?.toString().trim() || '') : '',
+      obs: iObs >= 0 ? (row[iObs]?.toString().trim() || '') : '',
+    });
+  }
+  return clientes;
+}
+
+// ════════════════════════════════
+//  AGRUPAMENTO POR REGIÃO
+// ════════════════════════════════
+function normStr(s) {
+  return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+}
+
+function extrairLogradouro(end) {
+  // pega a rua/av principal
+  const m = end.match(/^((?:av(?:enida)?|rua|r\.|al(?:ameda)?|pca|praça|estrada|rod(?:ovia)?|travessa)\.?\s+[^,\d]+)/i);
+  return m ? normStr(m[1].trim()) : normStr(end.split(',')[0].trim());
+}
+
+function agruparPorRegiao(clientes) {
+  // Agrupa por bairro (se disponível) ou por início do endereço
+  const grupos = {};
+  for (const c of clientes) {
+    const chave = c.bairro
+      ? normStr(c.bairro)
+      : extrairLogradouro(c.end);
+    if (!grupos[chave]) grupos[chave] = { label: c.bairro || c.end.split(',')[0], clientes: [] };
+    grupos[chave].clientes.push(c);
+  }
+  // Ordenar grupos por nome (proxy geográfico)
+  return Object.values(grupos).sort((a,b) => a.label.localeCompare(b.label));
+}
+
+// ════════════════════════════════
+//  DIVISÃO EM QUINZENAS/SEMANAS/DIAS
+// ════════════════════════════════
+function dividirQuinzenas(grupos, maxDia) {
+  // Flatten todos os clientes mantendo grupo como metadata
+  const todos = [];
+  for (const g of grupos) {
+    for (const c of g.clientes) {
+      todos.push({ ...c, regiaoLabel: g.label });
+    }
+  }
+
+  const metade = Math.ceil(todos.length / 2);
+  const q1clients = todos.slice(0, metade);
+  const q2clients = todos.slice(metade);
+
+  return [
+    montarQuinzena(q1clients, maxDia, 1),
+    montarQuinzena(q2clients, maxDia, 2),
+  ];
+}
+
+function montarQuinzena(clientes, maxDia, qNum) {
+  const semanas = [];
+  let diaGlobal = (qNum - 1) * 8 + 1;
+
+  // Divide em grupos de maxDia
+  let i = 0;
+  let semAtual = { num: 1, dias: [] };
+  let diaCount = 0;
+
+  while (i < clientes.length) {
+    const lote = clientes.slice(i, i + maxDia);
+    // Determina região predominante do lote
+    const regioes = [...new Set(lote.map(c => c.regiaoLabel))];
+    const label = regioes.slice(0,2).join(' / ');
+
+    semAtual.dias.push({ num: diaGlobal++, label, bairro: label, clientes: lote });
+    diaCount++;
+    i += maxDia;
+
+    // Nova semana a cada 5 dias (configurável)
+    if (diaCount > 0 && diaCount % 4 === 0 && i < clientes.length) {
+      semanas.push({ ...semAtual });
+      semAtual = { num: semAtual.num + 1, dias: [] };
+    }
+  }
+  if (semAtual.dias.length) semanas.push(semAtual);
+  return { label: `Quinzena ${qNum}`, semanas };
+}
+
+// ════════════════════════════════
+//  RENDER
+// ════════════════════════════════
+function renderRota(nome, total) {
+  // Topbar
+  document.getElementById('topbar-nome').textContent = nome ? `Rota — ${nome}` : 'Rota do Mês';
+  document.getElementById('topbar-sub').textContent = `${total} clientes · RotaFácil`;
+
+  // Stats
+  const strip = document.getElementById('stats-strip');
+  const diasTotais = quinzenas.reduce((a, q) => a + q.semanas.reduce((b, s) => b + s.dias.length, 0), 0);
+  strip.innerHTML = `
+    <div class="stat-pill"><div class="stat-pill-val">${total}</div><div class="stat-pill-lbl">Total</div></div>
+    <div class="stat-pill"><div class="stat-pill-val">${Math.ceil(total/2)}</div><div class="stat-pill-lbl">Por quinzena</div></div>
+    <div class="stat-pill"><div class="stat-pill-val">${diasTotais}</div><div class="stat-pill-lbl">Dias de visita</div></div>
+    <div class="stat-pill"><div class="stat-pill-val">${Math.ceil(total/diasTotais)}</div><div class="stat-pill-lbl">Por dia</div></div>`;
+
+  // Tabs
+  const tabs = document.getElementById('q-tabs');
+  tabs.innerHTML = quinzenas.map((q, i) =>
+    `<button class="q-tab ${i===0?'active':''}" onclick="switchQ(${i})">${i===0?'🟦':'🟩'} ${q.label}</button>`
+  ).join('');
+
+  renderPanels();
+}
+
+function renderPanels() {
+  const content = document.getElementById('rota-content');
+  content.innerHTML = quinzenas.map((q, qi) => `
+    <div class="q-panel ${qi===activeQ?'active':''}" id="qpanel-${qi}">
+      ${q.semanas.map((sem, si) => `
+        <div class="semana-sep">— Semana ${sem.num} —</div>
+        ${sem.dias.map(dia => renderDia(dia, qi)).join('')}
+      `).join('')}
+    </div>
+  `).join('');
+}
+
+function renderDia(dia, qi) {
+  const visitCount = dia.clientes.filter(c => visitados[c.id]).length;
+  const pct = Math.round(visitCount / dia.clientes.length * 100);
+  return `
+  <div class="dia-card open" id="dia-${dia.num}">
+    <div class="dia-head" onclick="toggleDia(${dia.num})">
+      <div class="dia-num">D${dia.num}</div>
+      <div class="dia-info">
+        <div class="dia-title">${capitalizar(dia.label)}</div>
+        <div class="dia-bairro">${capitalizar(dia.bairro)}</div>
+      </div>
+      <div class="dia-badge">${dia.clientes.length} lojas</div>
+      <div class="dia-chevron">▼</div>
+    </div>
+    <div class="dia-progress"><div class="dia-progress-bar" id="prog-${dia.num}" style="width:${pct}%"></div></div>
+    <div class="lojas-list" id="lojas-${dia.num}">
+      ${dia.clientes.map(c => renderLoja(c)).join('')}
+    </div>
+  </div>`;
+}
+
+function renderLoja(c) {
+  const vis = visitados[c.id];
+  const obs = observacoes[c.id] || c.obs;
+  const endEnc = encodeURIComponent(c.end + (c.bairro ? ' ' + c.bairro : '') + ' Brasil');
+  const wazeUrl = `https://waze.com/ul?q=${endEnc}`;
+  const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${endEnc}`;
+  const telLink = c.tel ? `<a class="btn-phone" href="tel:${c.tel.replace(/\D/g,'')}">📞</a>` : '';
+  const obsHtml = obs ? `<div class="loja-obs">📝 ${obs}</div>` : '';
+  const telHtml = c.tel ? `<div class="loja-tel">📱 ${c.tel}</div>` : '';
+
+  return `
+  <div class="loja-item ${vis?'visitada':''}" id="loja-${c.id}">
+    <div class="loja-check" onclick="toggleVisita('${c.id}')">${vis?'✓':''}</div>
+    <div class="loja-body">
+      <div class="loja-nome">${c.nome}</div>
+      <div class="loja-end">📌 ${c.end}${c.bairro?' — '+c.bairro:''}</div>
+      ${telHtml}
+      ${obsHtml}
+      <button class="btn-obs" onclick="editarObs('${c.id}')">+ observação</button>
+    </div>
+    <div class="loja-actions">
+      <div class="loja-status ${vis?'status-visitada':'status-normal'}">${vis?'Visitada':'Pendente'}</div>
+      <div class="nav-row">
+        <a class="btn-waze" href="${wazeUrl}" target="_blank">🚗</a>
+        <a class="btn-gmaps" href="${mapsUrl}" target="_blank">📍</a>
+        ${telLink}
+      </div>
+    </div>
+  </div>`;
+}
+
+// ════════════════════════════════
+//  INTERAÇÕES
+// ════════════════════════════════
+function toggleDia(num) {
+  document.getElementById('dia-' + num).classList.toggle('open');
+}
+
+function switchQ(i) {
+  activeQ = i;
+  document.querySelectorAll('.q-tab').forEach((t,j) => t.classList.toggle('active', i===j));
+  document.querySelectorAll('.q-panel').forEach((p,j) => p.classList.toggle('active', i===j));
+}
+
+function toggleVisita(id) {
+  visitados[id] = !visitados[id];
+  localStorage.setItem('rotafacil_visitados', JSON.stringify(visitados));
+  // Re-render o item
+  const item = document.getElementById('loja-' + id);
+  if (!item) return;
+  const c = allClientes.find(x => x.id === id);
+  if (c) item.outerHTML = renderLoja(c);
+  showToast(visitados[id] ? '✅ Marcado como visitado' : '↩️ Marcado como pendente');
+  atualizarProgressos();
+}
+
+function atualizarProgressos() {
+  quinzenas.forEach(q => q.semanas.forEach(s => s.dias.forEach(dia => {
+    const vis = dia.clientes.filter(c => visitados[c.id]).length;
+    const pct = Math.round(vis / dia.clientes.length * 100);
+    const bar = document.getElementById('prog-' + dia.num);
+    if (bar) bar.style.width = pct + '%';
+  })));
+}
+
+function filtrarClientes(q) {
+  const term = q.toLowerCase();
+  document.querySelectorAll('.loja-item').forEach(el => {
+    const txt = el.innerText.toLowerCase();
+    el.style.display = term === '' || txt.includes(term) ? 'flex' : 'none';
+  });
+}
+
+function editarObs(id) {
+  const obs = prompt('Observação para este cliente:', observacoes[id] || '');
+  if (obs === null) return;
+  observacoes[id] = obs;
+  localStorage.setItem('rotafacil_obs', JSON.stringify(observacoes));
+  renderPanels();
+  showToast('📝 Observação salva');
+}
+
+// ════════════════════════════════
+//  MODAL ADD CLIENTE
+// ════════════════════════════════
+function abrirModalAdd() {
+  document.getElementById('modal-add').classList.add('open');
+}
+function fecharModal() {
+  document.getElementById('modal-add').classList.remove('open');
+}
+function salvarCliente() {
+  const nome = document.getElementById('add-nome').value.trim();
+  const end  = document.getElementById('add-end').value.trim();
+  if (!nome || !end) { showToast('Nome e endereço são obrigatórios'); return; }
+
+  const novo = {
+    id: 'c' + Date.now(),
+    nome,
+    end,
+    bairro: document.getElementById('add-bairro').value.trim(),
+    tel: document.getElementById('add-tel').value.trim(),
+    obs: document.getElementById('add-obs').value.trim(),
+    regiaoLabel: document.getElementById('add-bairro').value.trim() || end.split(',')[0],
+  };
+
+  const qi = parseInt(document.getElementById('add-quinzena').value);
+  allClientes.push(novo);
+
+  // Adiciona no último dia da quinzena escolhida ou cria dia novo
+  const q = quinzenas[qi];
+  const ultimaSem = q.semanas[q.semanas.length - 1];
+  const ultimoDia = ultimaSem.dias[ultimaSem.dias.length - 1];
+  ultimoDia.clientes.push(novo);
+  ultimoDia.label = [...new Set(ultimoDia.clientes.map(c => c.regiaoLabel))].slice(0,2).join(' / ');
+
+  renderPanels();
+  fecharModal();
+  showToast('✅ Cliente adicionado com sucesso');
+
+  // Limpa campos
+  ['add-nome','add-end','add-bairro','add-tel','add-obs'].forEach(id => document.getElementById(id).value = '');
+}
+
+// ════════════════════════════════
+//  EXPORTAR PARA WHATSAPP
+// ════════════════════════════════
+function exportarWhatsApp() {
+  let texto = `🗺️ *ROTA DO MÊS*\n📦 ${allClientes.length} clientes · RotaFácil\n\n`;
+  quinzenas.forEach((q, qi) => {
+    texto += `${qi===0?'🟦':'🟩'} *${q.label.toUpperCase()}*\n\n`;
+    q.semanas.forEach(sem => {
+      texto += `— Semana ${sem.num} —\n`;
+      sem.dias.forEach(dia => {
+        texto += `\n📍 *Dia ${dia.num} · ${capitalizar(dia.label)}*\n`;
+        dia.clientes.forEach(c => {
+          const vis = visitados[c.id] ? '✅' : '🛒';
+          texto += `${vis} *${c.nome}*\n📌 ${c.end}${c.bairro?' — '+c.bairro:''}\n`;
+          if (c.tel) texto += `📱 ${c.tel}\n`;
+        });
+      });
+      texto += '\n';
+    });
+  });
+  const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`;
+  window.open(url, '_blank');
+}
+
+function voltarInicio() {
+  if (confirm('Voltar ao início? A rota atual será mantida no histórico.')) {
+    showScreen('welcome');
+  }
+}
+
+// ════════════════════════════════
+//  HELPERS
+// ════════════════════════════════
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+function capitalizar(s) {
+  if (!s) return '';
+  return s.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+}
+
+// Fechar modal clicando fora
+document.getElementById('modal-add').addEventListener('click', function(e) {
+  if (e.target === this) fecharModal();
+});
+</script>
+</body>
+</html>
